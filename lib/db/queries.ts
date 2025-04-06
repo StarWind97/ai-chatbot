@@ -1,7 +1,8 @@
 import 'server-only';
 
 import { genSaltSync, hashSync } from 'bcrypt-ts';
-import { and, asc, desc, eq, gt, gte, inArray, lt, SQL } from 'drizzle-orm';
+import { and, asc, desc, eq, gt, gte, inArray, lt } from 'drizzle-orm';
+import type { SQL } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 
@@ -15,9 +16,9 @@ import {
   message,
   vote,
   type DBMessage,
-  Chat,
+  type Chat,
 } from './schema';
-import { ArtifactKind } from '@/components/artifact';
+import type { ArtifactKind } from '@/components/artifact';
 
 // Optionally, if not using email/pass login, you can
 // use the Drizzle adapter for Auth.js / NextAuth

@@ -11,22 +11,26 @@ export const metadata: Metadata = {
   description: 'Next.js chatbot template using the AI SDK.',
 };
 
+//防止移动设备上的自动缩放
 export const viewport = {
   maximumScale: 1, // Disable auto-zoom on mobile Safari
 };
 
+//字体
 const geist = Geist({
   subsets: ['latin'],
   display: 'swap',
   variable: '--font-geist',
 });
 
+//字体
 const geistMono = Geist_Mono({
   subsets: ['latin'],
   display: 'swap',
   variable: '--font-geist-mono',
 });
 
+//主题颜色 亮/暗主题切换功能
 const LIGHT_THEME_COLOR = 'hsl(0 0% 100%)';
 const DARK_THEME_COLOR = 'hsl(240deg 10% 3.92%)';
 const THEME_COLOR_SCRIPT = `\
@@ -70,12 +74,14 @@ export default async function RootLayout({
         />
       </head>
       <body className="antialiased">
+        {/* 主题切换 */}
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
           enableSystem
           disableTransitionOnChange
         >
+          {/* 消息提示 */}
           <Toaster position="top-center" />
           {children}
         </ThemeProvider>

@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { chatModels } from '@/lib/ai/models';
+import { chatModelsForTest } from '@/lib/ai/models';
 import { expect, Page } from '@playwright/test';
 
 export class ChatPage {
@@ -94,7 +94,7 @@ export class ChatPage {
   }
 
   public async chooseModelFromSelector(chatModelId: string) {
-    const chatModel = chatModels.find(
+    const chatModel = chatModelsForTest.find(
       (chatModel) => chatModel.id === chatModelId,
     );
 

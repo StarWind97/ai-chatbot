@@ -27,45 +27,42 @@ import { isProductionEnvironment } from '@/lib/constants';
 import { myProvider } from '@/lib/ai/providers';
 
 /**
-AI相关库
-  UIMessage : 定义了UI层面的消息结构类型
-  appendResponseMessages : 用于将AI响应消息追加到现有消息列表
-  createDataStreamResponse : 创建数据流式响应，支持实时流式输出
-  smoothStream : 平滑流式输出，使文本输出更自然
-  streamText : 核心函数，用于从AI模型获取流式文本响应
-认证相关
-  auth : 处理用户认证，确保只有已登录用户可以访问API
-提示词系统
-  systemPrompt : 根据选定的聊天模型提供系统提示词
-数据库操作
-  deleteChatById : 删除指定ID的聊天记录
-  getChatById : 获取指定ID的聊天记录
-  saveChat : 保存新的聊天会话
-  saveMessages : 保存消息到数据库
-工具函数
-  generateUUID : 生成唯一标识符
-  getMostRecentUserMessage : 获取最近的用户消息
-  getTrailingMessageId : 获取消息列表中最后一条消息的ID
-聊天功能
-  generateTitleFromUserMessage : 根据用户消息自动生成聊天标题
-AI工具集
-  createDocument : AI创建文档的工具
-  updateDocument : AI更新文档的工具
-  requestSuggestions : AI请求建议的工具
-  getWeather : 获取天气信息的工具
-环境和提供者
-  isProductionEnvironment : 判断是否为生产环境
-  myProvider : AI模型提供者，用于获取语言模型实例
-
+ * AI-related libraries
+ *   UIMessage: Defines UI-level message structure type
+ *   appendResponseMessages: Used to append AI response messages to existing message list
+ *   createDataStreamResponse: Creates data stream response, supports real-time streaming output
+ *   smoothStream: Smooths stream output, making text output more natural
+ *   streamText: Core function for getting streaming text response from AI model
+ * Authentication
+ *   auth: Handles user authentication, ensures only logged-in users can access API
+ * Prompt system
+ *   systemPrompt: Provides system prompts based on selected chat model
+ * Database operations
+ *   deleteChatById: Deletes chat record by ID
+ *   getChatById: Gets chat record by ID
+ *   saveChat: Saves new chat session
+ *   saveMessages: Saves messages to database
+ * Utility functions
+ *   generateUUID: Generates unique identifier
+ *   getMostRecentUserMessage: Gets most recent user message
+ *   getTrailingMessageId: Gets ID of last message in message list
+ * Chat features
+ *   generateTitleFromUserMessage: Automatically generates chat title based on user message
+ * AI tool set
+ *   createDocument: Tool for AI to create documents
+ *   updateDocument: Tool for AI to update documents
+ *   requestSuggestions: Tool for AI to request suggestions
+ *   getWeather: Tool to get weather information
+ * Environment and provider
+ *   isProductionEnvironment: Determines if in production environment
+ *   myProvider: AI model provider, used to get language model instance
  */
 
-// 设置最大执行时间
-export const maxDuration = 60;
-
-/** 
-这整个流程实现了一个高级的AI聊天功能，支持实时流式响应、工具集成、平滑输出和完整的数据持久化，同时处理了错误情况和边界条件。
-*/
-// id 考虑重命名 chatId
+/**
+ * This entire process implements an advanced AI chat feature, supporting real-time
+ * streaming responses, tool integration, smooth output, and complete data persistence,
+ * while handling error cases and boundary conditions.
+ */
 export async function POST(request: Request) {
   try {
     const {
@@ -79,43 +76,35 @@ export async function POST(request: Request) {
     } = await request.json();
 
     const session = await auth();
-    //验证用户是否已登录
+    // Verify user is logged in
     if (!session || !session.user || !session.user.id) {
       return new Response('Unauthorized', { status: 401 });
     }
 
-    //获取最近的用户消息
-    //重命名：userMessageMostRecent
+    // Get most recent user message
     const userMessage = getMostRecentUserMessage(messages);
-    //验证用户消息是否存在
+    // Verify user message exists
     if (!userMessage) {
       return new Response('No user message found', { status: 400 });
     }
 
-    // 检查是否有附件（多模态内容）
-    // const hasAttachments =
-    //   userMessage.experimental_attachments &&
-    //   userMessage.experimental_attachments.length > 0;
-
-    //检查聊天会话是否已存在（数据库）
+    // Check if chat session already exists (in database)
     const chat = await getChatById({ id });
 
     if (!chat) {
       const title = await generateTitleFromUserMessage({
         message: userMessage,
       });
-      //如果聊天会话不存在，则生成标题并保存到数据库
+      // If chat session doesn't exist, generate title and save to database
       await saveChat({ id, userId: session.user.id, title });
     } else {
-      //如果存在，验证用户是否有权限访问该聊天会话
+      // If exists, verify user has permission to access this chat session
       if (chat.userId !== session.user.id) {
         return new Response('Unauthorized', { status: 401 });
       }
     }
 
-    //保存用户消息到数据库
-    //userMessage 是从消息列表中获取的最近一条用户消息对象
-    //userMessage.parts 包含了该消息的实际内容部分，可能是一个数组或对象，存储了消息的各个组成部分
+    // Save user message to database
     await saveMessages({
       messages: [
         {
@@ -129,21 +118,19 @@ export async function POST(request: Request) {
       ],
     });
 
-    //聊天API的核心部分，使用 AI 模型生成响应
+    // Core part of chat API, using AI model to generate response
     return createDataStreamResponse({
       execute: (dataStream) => {
         const result = streamText({
-          //使用指定的语言模型
+          // Use specified language model
           model: myProvider.languageModel(selectedChatModel),
-          //应用系统提示词
+          // Apply system prompt
           system: systemPrompt({ selectedChatModel }),
-          //传入消息历史
+          // Pass message history
           messages,
-          //设置最大步骤数，限制模型思考的最大步骤数
+          // Set maximum steps, limiting model's thinking steps
           maxSteps: 5,
-          //根据选择的模型动态启用不同的工具
-          //如果选择的模型是 'chat-model-reasoning'，则不启用任何工具
-          //否则，启用天气查询、文档创建/更新和建议请求工具
+          // Dynamically enable different tools based on selected model
           experimental_activeTools:
             selectedChatModel === 'chat-model-reasoning'
               ? []
@@ -153,11 +140,11 @@ export async function POST(request: Request) {
                   'updateDocument',
                   'requestSuggestions',
                 ],
-          //使用 smoothStream 优化输出流，按词分块，使文本输出更加自然流畅
+          // Use smoothStream to optimize output, chunk by word for more natural text output
           experimental_transform: smoothStream({ chunking: 'word' }),
-          //使用 generateUUID 函数为每条消息生成唯一ID
+          // Generate unique ID for each message
           experimental_generateMessageId: generateUUID,
-          //定义可用工具的具体实现
+          // Define available tools implementation
           tools: {
             getWeather,
             createDocument: createDocument({ session, dataStream }),
@@ -167,13 +154,12 @@ export async function POST(request: Request) {
               dataStream,
             }),
           },
-          //定义了在生成响应完成时，要执行的操作
+          // Define operations to execute when response generation is complete
           //response.messages 主要包含的是当前交互的消息，即用户的最新提问和模型的最新回复。它不包含完整的对话历史。
           onFinish: async ({ response }) => {
             if (session.user?.id) {
               try {
-                //获取助手角色的最后一条消息ID
-                //重命名：assistantTrailingMessageId
+                // Get last assistant message ID
                 const assistantId = getTrailingMessageId({
                   messages: response.messages.filter(
                     (message) => message.role === 'assistant',
@@ -184,11 +170,12 @@ export async function POST(request: Request) {
                   throw new Error('No assistant message found!');
                 }
                 //通过解构赋值，只获取第二个元素，即AI助手的最新响应消息对象
+                // Get AI assistant's latest response message
                 const [, assistantMessage] = appendResponseMessages({
                   messages: [userMessage],
                   responseMessages: response.messages,
                 });
-                //将助手消息保存到数据库，包括ID、聊天ID、角色、内容、附件和创建时间
+                // Save assistant message to database
                 await saveMessages({
                   messages: [
                     {
@@ -207,23 +194,23 @@ export async function POST(request: Request) {
               }
             }
           },
-          //启用实验性的遥测功能，根据环境变量控制是否启用
+          // Enable experimental telemetry, controlled by environment variable
           experimental_telemetry: {
             isEnabled: isProductionEnvironment,
             functionId: 'stream-text',
           },
         });
 
-        //最后处理流数据：
-        //consumeStream() 来消费生成的文本数据，开始处理
+        // Process stream data:
+        // Use consumeStream() to start processing generated text data
         result.consumeStream();
-        //将结果合并到数据流中，并设置 sendReasoning: true 以包含推理过程
+        // Merge results into data stream, set sendReasoning: true to include reasoning process
         result.mergeIntoDataStream(dataStream, {
           sendReasoning: true,
         });
       },
       onError: () => {
-        return 'Oops, an error occured!';
+        return 'Oops, an error occurred!';
       },
     });
   } catch (error) {

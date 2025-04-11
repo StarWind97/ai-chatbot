@@ -26,8 +26,6 @@ import { getWeather } from '@/lib/ai/tools/get-weather';
 import { isProductionEnvironment } from '@/lib/constants';
 import { myProvider } from '@/lib/ai/providers';
 
-import { processMultimodalMessage } from '@/lib/ai/multimodal-helpers';
-
 /**
 AI相关库
   UIMessage : 定义了UI层面的消息结构类型

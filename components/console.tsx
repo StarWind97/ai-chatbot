@@ -1,8 +1,8 @@
 import { TerminalWindowIcon, LoaderIcon, CrossSmallIcon } from './icons';
 import { Button } from './ui/button';
 import {
-  Dispatch,
-  SetStateAction,
+  type Dispatch,
+  type SetStateAction,
   useCallback,
   useEffect,
   useRef,
@@ -177,3 +177,13 @@ export function Console({ consoleOutputs, setConsoleOutputs }: ConsoleProps) {
     </>
   ) : null;
 }
+
+// Hidden from client component tree, but we can inject it for testing
+export const exportConsole = {
+  // Export for debugging
+  logs: [],
+  // Show logs in client
+  show: () => {},
+  // Hide logs in client
+  hide: () => {},
+};

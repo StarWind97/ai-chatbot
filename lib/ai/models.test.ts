@@ -1,12 +1,12 @@
-// 导入模拟可读流的函数，用于模拟流式响应
+// Import the function to simulate readable streams for simulating streaming responses
 import { simulateReadableStream } from 'ai';
-// 导入模拟语言模型类，用于创建测试用的假模型
+// Import the mock language model class for creating test fake models
 import { MockLanguageModelV1 } from 'ai/test';
-// 导入一个工具函数，根据提示词生成响应块
+// Import a utility function that generates response chunks based on prompts
 import { getResponseChunksByPrompt } from '@/tests/prompts/utils';
 
 /**
-这个文件主要用于测试环境中模拟 AI 模型的响应。
+This file is primarily used for simulating AI model responses in the test environment.
 
 chatModel       -->    chatModelForTest
 reasoningModel  -->    reasoningModelForTest
@@ -14,7 +14,7 @@ titleModel      -->    titleModelForTest
 artifactModel   -->    artifactModelForTest
  */
 
-// 模拟聊天模型
+// Mock chat model
 export const chatModelForTest = new MockLanguageModelV1({
   doGenerate: async () => ({
     rawCall: { rawPrompt: null, rawSettings: {} },
@@ -32,7 +32,7 @@ export const chatModelForTest = new MockLanguageModelV1({
   }),
 });
 
-// 模拟推理模型（用于思考过程）
+// Mock reasoning model (for thinking process)
 export const reasoningModelForTest = new MockLanguageModelV1({
   doGenerate: async () => ({
     rawCall: { rawPrompt: null, rawSettings: {} },
@@ -50,7 +50,7 @@ export const reasoningModelForTest = new MockLanguageModelV1({
   }),
 });
 
-// 模拟标题生成模型
+// Mock title generation model
 export const titleModelForTest = new MockLanguageModelV1({
   doGenerate: async () => ({
     rawCall: { rawPrompt: null, rawSettings: {} },
@@ -76,7 +76,7 @@ export const titleModelForTest = new MockLanguageModelV1({
   }),
 });
 
-// 模拟工件模型（可能用于生成代码或其他结构化内容）
+// Mock artifact model (possibly used for generating code or other structured content)
 export const artifactModelForTest = new MockLanguageModelV1({
   doGenerate: async () => ({
     rawCall: { rawPrompt: null, rawSettings: {} },
@@ -95,29 +95,29 @@ export const artifactModelForTest = new MockLanguageModelV1({
 });
 
 /** 
-## 核心功能解析
-1. 模拟模型创建 ：
+## Core Functionality Analysis
+1. Mock Model Creation:
    
-   - 文件创建了四个不同的模拟语言模型： chatModel 、 reasoningModel 、 titleModel 和 artifactModel
-   - 每个模型都使用 MockLanguageModelV1 类实例化，用于测试环境
-2. 模型方法实现 ：
+   - The file creates four different mock language models: chatModel, reasoningModel, titleModel, and artifactModel
+   - Each model is instantiated using the MockLanguageModelV1 class for the test environment
+2. Model Method Implementation:
    
-   - 每个模型都实现了两个主要方法：
-     - doGenerate ：同步生成完整文本响应
-     - doStream ：流式生成文本响应，模拟真实AI模型的逐字输出
-3. 响应模拟 ：
+   - Each model implements two main methods:
+     - doGenerate: Synchronously generates complete text responses
+     - doStream: Streams text responses, simulating real AI model's word-by-word output
+3. Response Simulation:
    
-   - 使用 simulateReadableStream 函数模拟流式响应
-   - 设置了延迟参数，使响应看起来更像真实AI模型（有思考时间和打字速度）
-4. 不同模型的特点 ：
+   - Uses the simulateReadableStream function to simulate streaming responses
+   - Sets delay parameters to make responses look more like real AI models (with thinking time and typing speed)
+4. Characteristics of Different Models:
    
-   - chatModel ：基本的聊天响应模型
-   - reasoningModel ：初始延迟更长(500ms)，可能模拟"思考"过程
-   - titleModel ：固定返回标题文本，不依赖输入提示
-   - artifactModel ：与chatModel类似，可能用于生成特定格式内容
-5. 响应格式 ：
+   - chatModel: Basic chat response model
+   - reasoningModel: Longer initial delay (500ms), possibly simulating a "thinking" process
+   - titleModel: Returns fixed title text, not dependent on input prompts
+   - artifactModel: Similar to chatModel, possibly used to generate specific format content
+5. Response Format:
    
-   - 包含元数据如 finishReason 、 usage （令牌使用情况）
-   - 流式响应包含 text-delta （文本增量）和 finish （完成）类型的块
-这个文件的主要目的是在测试环境中提供可预测的AI模型响应，避免在测试时依赖真实的AI服务，从而使测试更加可靠和一致。
+   - Includes metadata such as finishReason, usage (token usage)
+   - Streaming responses include text-delta (text increment) and finish (completion) type chunks
+The main purpose of this file is to provide predictable AI model responses in the test environment, avoiding dependence on real AI services during testing, making tests more reliable and consistent.
 */

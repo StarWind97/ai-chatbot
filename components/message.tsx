@@ -1,9 +1,10 @@
 'use client';
 
 import type { UIMessage } from 'ai';
-import cx from 'classnames';
+import { useState } from 'react';
+import cn from 'classnames';
 import { AnimatePresence, motion } from 'framer-motion';
-import { memo, useState } from 'react';
+import { memo } from 'react';
 import type { Vote } from '@/lib/db/schema';
 import { DocumentToolCall, DocumentToolResult } from './document';
 import { PencilEditIcon, SparklesIcon } from './icons';
@@ -12,13 +13,14 @@ import { MessageActions } from './message-actions';
 import { PreviewAttachment } from './preview-attachment';
 import { Weather } from './weather';
 import equal from 'fast-deep-equal';
-import { cn } from '@/lib/utils';
 import { Button } from './ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 import { MessageEditor } from './message-editor';
 import { DocumentPreview } from './document-preview';
 import { MessageReasoning } from './message-reasoning';
 import type { UseChatHelpers } from '@ai-sdk/react';
+import Image from 'next/image';
+import { PenLineIcon, SendIcon } from 'lucide-react';
 
 const PurePreviewMessage = ({
   chatId,
@@ -38,6 +40,22 @@ const PurePreviewMessage = ({
   isReadonly: boolean;
 }) => {
   const [mode, setMode] = useState<'view' | 'edit'>('view');
+
+  // Check for image attachments in the message
+  const imageAttachments =
+    message.experimental_attachments?.filter((attachment) =>
+      attachment.contentType?.startsWith('image/'),
+    ) || [];
+
+  // Debug info for images
+  if (
+    process.env.NODE_ENV !== 'production' &&
+    message.experimental_attachments?.length
+  ) {
+    console.log(
+      `[DEBUG] Message has ${message.experimental_attachments.length} attachments, ${imageAttachments.length} are images.`,
+    );
+  }
 
   return (
     <AnimatePresence>
@@ -66,19 +84,22 @@ const PurePreviewMessage = ({
           )}
 
           <div className="flex flex-col gap-4 w-full">
-            {message.experimental_attachments && (
-              <div
-                data-testid={`message-attachments`}
-                className="flex flex-row justify-end gap-2"
-              >
-                {message.experimental_attachments.map((attachment) => (
-                  <PreviewAttachment
-                    key={attachment.url}
-                    attachment={attachment}
-                  />
-                ))}
-              </div>
-            )}
+            {message.experimental_attachments &&
+              message.experimental_attachments.length > 0 && (
+                <div className="mt-2 flex flex-col gap-2">
+                  {message.experimental_attachments.map((attachment, i) => (
+                    <div
+                      key={`attachment-${attachment.name || i}`}
+                      className="w-full max-w-md"
+                    >
+                      <PreviewAttachment
+                        attachment={attachment}
+                        messageView={true}
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
 
             {message.parts?.map((part, index) => {
               const { type } = part;
@@ -123,7 +144,11 @@ const PurePreviewMessage = ({
                             message.role === 'user',
                         })}
                       >
-                        <Markdown>{part.text}</Markdown>
+                        {message.role === 'user' ? (
+                          <div className="whitespace-pre-wrap">{part.text}</div>
+                        ) : (
+                          <Markdown>{part.text}</Markdown>
+                        )}
                       </div>
                     </div>
                   );
@@ -156,7 +181,7 @@ const PurePreviewMessage = ({
                   return (
                     <div
                       key={toolCallId}
-                      className={cx({
+                      className={cn({
                         skeleton: ['getWeather'].includes(toolName),
                       })}
                     >
@@ -214,6 +239,37 @@ const PurePreviewMessage = ({
               }
             })}
 
+            {mode === 'view' && imageAttachments.length > 0 && (
+              <div className="mt-3 grid grid-cols-1 gap-3">
+                {imageAttachments.map((attachment, index) => (
+                  <div
+                    key={`${attachment.name || 'image'}-${index}`}
+                    className="relative border border-border rounded-md overflow-hidden"
+                  >
+                    <div className="relative aspect-square max-w-md">
+                      <Image
+                        src={attachment.url}
+                        alt={attachment.name || 'Generated image'}
+                        fill
+                        className="object-contain"
+                        onError={(e) => {
+                          console.error(
+                            `[ERROR] Failed to load image: ${attachment.name || 'unnamed'}`,
+                            e,
+                          );
+                        }}
+                      />
+                    </div>
+                    {attachment.name && (
+                      <div className="p-2 text-xs truncate bg-background/50 absolute bottom-0 left-0 right-0">
+                        {attachment.name}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
             {!isReadonly && (
               <MessageActions
                 key={`action-${message.id}`}
@@ -254,7 +310,7 @@ export const ThinkingMessage = () => {
       data-role={role}
     >
       <div
-        className={cx(
+        className={cn(
           'flex gap-4 group-data-[role=user]/message:px-3 w-full group-data-[role=user]/message:w-fit group-data-[role=user]/message:ml-auto group-data-[role=user]/message:max-w-2xl group-data-[role=user]/message:py-2 rounded-xl',
           {
             'group-data-[role=user]/message:bg-muted': true,

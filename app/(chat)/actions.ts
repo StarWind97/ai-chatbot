@@ -22,6 +22,17 @@ export async function generateTitleFromUserMessage({
 }: {
   message: Message;
 }) {
+  // Extract only the text content from the message parts, handle potential undefined parts
+  const textContent = (message.parts || []) // Add fallback for undefined parts
+    .filter((part) => part.type === 'text')
+    .map((part) => part.text)
+    .join('\n');
+
+  // If no text content, use a default prompt or handle as needed
+  const promptContent =
+    textContent.trim() || '[User sent a message without text]';
+
+  // Use only the extracted text content as the prompt
   const { text: title } = await generateText({
     model: myProvider.languageModel('title-model'),
     system: `\n
@@ -29,7 +40,7 @@ export async function generateTitleFromUserMessage({
     - ensure it is not more than 80 characters long
     - the title should be a summary of the user's message
     - do not use quotes or colons`,
-    prompt: JSON.stringify(message),
+    prompt: promptContent, // Use safe prompt content
   });
 
   return title;

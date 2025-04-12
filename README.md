@@ -15,6 +15,91 @@
 </p>
 <br/>
 
+# AI Chatbot
+
+An advanced AI chatbot application with cloud-based API integration.
+
+## Features
+
+- Multi-model chat interface
+- Support for attachments and images
+- Document generation and editing
+- Image generation with Aliyun DashScope API
+- Real-time streaming responses
+- Chat history and session management
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js 18+
+- pnpm (recommended) or npm
+
+### Installation
+
+```bash
+# Install dependencies
+pnpm install
+```
+
+### Configuration
+
+Create a `.env.local` file in the project root with your API keys and configuration:
+
+```env
+# OpenRouter API Configuration
+OPENROUTER_API_KEY=your_api_key
+OPENROUTER_API_BASE_URL=https://openrouter.ai/api/v1
+OPENROUTER_SITE_URL=http://localhost:3000
+OPENROUTER_APP_NAME=ai-chatbot
+
+# Aliyun DashScope API Configuration
+ALIYUN_API_KEY=your_aliyun_api_key
+ALIYUN_API_BASE_URL=https://dashscope.aliyuncs.com/api/v1
+
+# See .env.example for full configuration options
+```
+
+### Development
+
+```bash
+# Start development server
+pnpm dev
+```
+
+## Testing and Monitoring
+
+The project includes comprehensive test scripts for the Aliyun DashScope API integration:
+
+```bash
+# Run standard API tests (authentication and image generation)
+pnpm tsx scripts/dashscope-tests/run-tests.ts
+
+# Run Wanx model tests specifically
+pnpm tsx scripts/dashscope-tests/run-wanx-tests.ts
+
+# Get a summary of test results
+pnpm tsx scripts/dashscope-tests/get-test-summary.ts
+```
+
+For scheduled monitoring:
+
+- **Windows**: `powershell -ExecutionPolicy Bypass -File scripts/dashscope-tests/schedule-tests.ps1`
+- **Linux/macOS**: `./scripts/dashscope-tests/schedule-tests.sh`
+
+More details in [Scripts Documentation](./scripts/README.md).
+
+## License
+
+Copyright (c) 2023-2025 AI Chatbot Contributors
+
+## Documentation
+
+For more detailed documentation:
+
+- [Scripts Documentation](./scripts/README.md)
+- [DashScope Tests Documentation](./scripts/dashscope-tests/README.md)
+
 ## Features
 
 - [Next.js](https://nextjs.org) App Router

@@ -60,8 +60,14 @@ export function Chat({
       // 当聊天完成时，重新获取聊天历史
       mutate(unstable_serialize(getChatHistoryPaginationKey));
     },
-    onError: () => {
+    onError: (error) => {
+      console.error('[ERROR] Chat error:', error);
       toast.error('An error occured, please try again!');
+    },
+    onResponse: (response) => {
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('[DEBUG] Chat response status:', response.status);
+      }
     },
   });
 

@@ -23,6 +23,7 @@ import { createDocument } from '@/lib/ai/tools/create-document';
 import { updateDocument } from '@/lib/ai/tools/update-document';
 import { requestSuggestions } from '@/lib/ai/tools/request-suggestions';
 import { getWeather } from '@/lib/ai/tools/get-weather';
+import { generateImage } from '@/lib/ai/tools/generate-image';
 import { isProductionEnvironment } from '@/lib/constants';
 import { myProvider } from '@/lib/ai/providers';
 
@@ -53,6 +54,7 @@ import { myProvider } from '@/lib/ai/providers';
  *   updateDocument: Tool for AI to update documents
  *   requestSuggestions: Tool for AI to request suggestions
  *   getWeather: Tool to get weather information
+ *   generateImage: Tool for AI to generate images
  * Environment and provider
  *   isProductionEnvironment: Determines if in production environment
  *   myProvider: AI model provider, used to get language model instance
@@ -65,6 +67,11 @@ import { myProvider } from '@/lib/ai/providers';
  */
 export async function POST(request: Request) {
   try {
+    // Add initial log for debugging request processing
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('[DEBUG] POST /api/chat received request');
+    }
+
     const {
       id,
       messages,
@@ -74,6 +81,13 @@ export async function POST(request: Request) {
       messages: Array<UIMessage>;
       selectedChatModel: string;
     } = await request.json();
+
+    // Add log after parsing JSON
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(
+        `[DEBUG] Processing chat ID: ${id}, Model: ${selectedChatModel}`,
+      );
+    }
 
     const session = await auth();
     // Verify user is logged in
@@ -105,18 +119,54 @@ export async function POST(request: Request) {
     }
 
     // Save user message to database
-    await saveMessages({
-      messages: [
-        {
-          id: userMessage.id,
-          chatId: id,
-          role: 'user',
-          parts: userMessage.parts,
-          attachments: userMessage.experimental_attachments ?? [],
-          createdAt: new Date(),
-        },
-      ],
-    });
+    try {
+      await saveMessages({
+        messages: [
+          {
+            id: userMessage.id,
+            chatId: id,
+            role: 'user',
+            parts: userMessage.parts,
+            attachments: userMessage.experimental_attachments ?? [],
+            createdAt: new Date(),
+          },
+        ],
+      });
+
+      // Add log after successfully saving user message
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(
+          `[DEBUG] Successfully saved user message ID: ${userMessage.id} for chat ID: ${id}`,
+        );
+      }
+    } catch (saveError) {
+      console.error(
+        `[ERROR] Failed to save user message ID: ${userMessage.id} for chat ID: ${id}`,
+        saveError,
+      );
+      // Decide if we should stop processing or continue despite save failure
+      // For now, let's return a 500 error immediately if saving fails
+      return new Response('Failed to save user message to database', {
+        status: 500,
+      });
+    }
+
+    // Debug log for user message attachments
+    if (
+      process.env.NODE_ENV !== 'production' &&
+      userMessage.experimental_attachments?.length
+    ) {
+      console.log(
+        `[DEBUG] Saved user message with ${
+          userMessage.experimental_attachments.length
+        } attachments:`,
+        userMessage.experimental_attachments.map((a) => ({
+          name: a.name,
+          contentType: a.contentType,
+          urlPartialLength: a.url?.substring(0, 30).length || 0,
+        })),
+      );
+    }
 
     // Core part of chat API, using AI model to generate response
     return createDataStreamResponse({
@@ -139,6 +189,7 @@ export async function POST(request: Request) {
                   'createDocument',
                   'updateDocument',
                   'requestSuggestions',
+                  'generateImage',
                 ],
           // Use smoothStream to optimize output, chunk by word for more natural text output
           experimental_transform: smoothStream({ chunking: 'word' }),
@@ -151,6 +202,9 @@ export async function POST(request: Request) {
             updateDocument: updateDocument({ session, dataStream }),
             requestSuggestions: requestSuggestions({
               session,
+              dataStream,
+            }),
+            generateImage: generateImage({
               dataStream,
             }),
           },
@@ -175,22 +229,72 @@ export async function POST(request: Request) {
                   messages: [userMessage],
                   responseMessages: response.messages,
                 });
+
+                // Debug for attachments in message
+                if (process.env.NODE_ENV !== 'production') {
+                  console.log(
+                    `[DEBUG] Processing assistant message to save with ID: ${assistantId}`,
+                  );
+
+                  if (assistantMessage.experimental_attachments?.length) {
+                    console.log(
+                      `[DEBUG] Assistant message has ${assistantMessage.experimental_attachments.length} attachments`,
+                    );
+                  }
+
+                  if (userMessage.experimental_attachments?.length) {
+                    console.log(
+                      `[DEBUG] User message had ${userMessage.experimental_attachments.length} attachments`,
+                    );
+                  }
+                }
+
                 // Save assistant message to database
-                await saveMessages({
-                  messages: [
-                    {
-                      id: assistantId,
-                      chatId: id,
-                      role: assistantMessage.role,
-                      parts: assistantMessage.parts,
-                      attachments:
-                        assistantMessage.experimental_attachments ?? [],
-                      createdAt: new Date(),
-                    },
-                  ],
-                });
-              } catch (_) {
-                console.error('Failed to save chat');
+                try {
+                  await saveMessages({
+                    messages: [
+                      {
+                        id: assistantId,
+                        chatId: id,
+                        role: assistantMessage.role,
+                        parts: assistantMessage.parts,
+                        attachments:
+                          assistantMessage.experimental_attachments ?? [],
+                        createdAt: new Date(),
+                      },
+                    ],
+                  });
+
+                  if (process.env.NODE_ENV !== 'production') {
+                    console.log(
+                      `[DEBUG] Successfully saved assistant message with ID: ${assistantId}`,
+                    );
+                  }
+                } catch (saveError) {
+                  console.error(
+                    '[ERROR] Failed to save assistant message:',
+                    saveError,
+                  );
+                }
+
+                // Debug log for attachments
+                if (
+                  process.env.NODE_ENV !== 'production' &&
+                  assistantMessage.experimental_attachments?.length
+                ) {
+                  console.log(
+                    `[DEBUG] Saved assistant message with ${
+                      assistantMessage.experimental_attachments.length
+                    } attachments:`,
+                    assistantMessage.experimental_attachments.map((a) => ({
+                      name: a.name,
+                      contentType: a.contentType,
+                      urlPartialLength: a.url?.substring(0, 30).length || 0,
+                    })),
+                  );
+                }
+              } catch (error) {
+                console.error('[ERROR] Failed to save chat:', error);
               }
             }
           },
@@ -209,13 +313,20 @@ export async function POST(request: Request) {
           sendReasoning: true,
         });
       },
-      onError: () => {
-        return 'Oops, an error occurred!';
+      onError: (error) => {
+        // Log the specific error caught by createDataStreamResponse
+        console.error(
+          '[ERROR] Error within createDataStreamResponse execution:',
+          error,
+        );
+        return 'Oops, an error occurred during stream processing!';
       },
     });
   } catch (error) {
+    // Log the error before returning response
+    console.error('[ERROR] Unhandled error in POST /api/chat:', error);
     return new Response('An error occurred while processing your request!', {
-      status: 404,
+      status: 500, // Corrected status code
     });
   }
 }
@@ -422,6 +533,9 @@ tools: {
     session,
     dataStream,
   }),
+  generateImage: generateImage({
+    dataStream,
+  }),
 }
 这段代码做了以下几件事：
 1. 定义工具映射 ：创建一个对象，将工具名称映射到对应的函数实现
@@ -459,6 +573,10 @@ tools: {
    - 请求AI提供建议
    - 通过工厂函数初始化，传入会话和数据流
    - 可能在生成建议时发送实时更新
+5. generateImage ：
+   - 生成图像
+   - 通过工厂函数初始化，传入数据流
+   - 可能在生成图像时发送实时更新
 
 数据流的作用
 dataStream 参数在工具执行过程中特别重要：

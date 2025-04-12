@@ -1,44 +1,116 @@
+import { z } from 'zod';
+
+// Log the raw environment variable when the module loads
+if (process.env.NODE_ENV !== 'production') {
+  console.log(
+    '[DEBUG] Raw process.env.DASHSCOPE_WANX_MODELS on module load:',
+    process.env.DASHSCOPE_WANX_MODELS,
+  );
+}
+
 // Environment variable type definitions
 // Adding type conversion processing in env.ts
 
+// Environment variable definitions using getters for dynamic access
 export const env = {
   // Authentication related
-  AUTH_SECRET: process.env.AUTH_SECRET || '',
-  AUTH_URL: process.env.AUTH_URL || '',
+  get AUTH_SECRET() {
+    return process.env.AUTH_SECRET || '';
+  },
+  get AUTH_URL() {
+    return process.env.AUTH_URL || '';
+  },
 
   // Vercel services
-  BLOB_READ_WRITE_TOKEN: process.env.BLOB_READ_WRITE_TOKEN || '',
-  POSTGRES_URL: process.env.POSTGRES_URL || '',
+  get BLOB_READ_WRITE_TOKEN() {
+    return process.env.BLOB_READ_WRITE_TOKEN || '';
+  },
+  get POSTGRES_URL() {
+    return process.env.POSTGRES_URL || '';
+  },
 
   // OpenRouter configuration
-  OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY || '',
-  OPENROUTER_API_BASE_URL:
-    process.env.OPENROUTER_API_BASE_URL || 'https://openrouter.ai/api/v1',
-  OPENROUTER_SITE_URL: process.env.OPENROUTER_SITE_URL || '',
-  OPENROUTER_APP_NAME: process.env.OPENROUTER_APP_NAME || '',
+  get OPENROUTER_API_KEY() {
+    return process.env.OPENROUTER_API_KEY || '';
+  },
+  get OPENROUTER_API_BASE_URL() {
+    return (
+      process.env.OPENROUTER_API_BASE_URL || 'https://openrouter.ai/api/v1'
+    );
+  },
+  get OPENROUTER_SITE_URL() {
+    return process.env.OPENROUTER_SITE_URL || '';
+  },
+  get OPENROUTER_APP_NAME() {
+    return process.env.OPENROUTER_APP_NAME || '';
+  },
+
+  // Aliyun Bailian configuration
+  get ALIYUN_API_KEY() {
+    return process.env.ALIYUN_API_KEY || '';
+  },
+  get ALIYUN_API_BASE_URL() {
+    return (
+      process.env.ALIYUN_API_BASE_URL || 'https://dashscope.aliyuncs.com/api/v1'
+    );
+  },
+
+  // Aliyun DashScope Image Models
+  get DASHSCOPE_FLUX_MODEL() {
+    return process.env.DASHSCOPE_FLUX_MODEL || 'flux-schnell';
+  },
+  get DASHSCOPE_WANX_MODELS() {
+    const rawValue = process.env.DASHSCOPE_WANX_MODELS;
+    return (rawValue || 'wanx2.1-t2i-turbo') // Default if env var is missing
+      .split(',')
+      .map((model) => model.trim())
+      .filter(Boolean);
+  },
 
   // Timeout settings
-  REQUEST_TIMEOUT: process.env.REQUEST_TIMEOUT
-    ? Number.parseInt(process.env.REQUEST_TIMEOUT)
-    : 60000,
+  get REQUEST_TIMEOUT() {
+    return Number.parseInt(process.env.REQUEST_TIMEOUT || '60000');
+  },
 
   // Model configuration
-  PRIMARY_MODEL: process.env.PRIMARY_MODEL || 'anthropic/claude-3.7-sonnet',
-  CHAT_MODEL: process.env.CHAT_MODEL || 'anthropic/claude-3.7-sonnet',
-  REASONING_MODEL: process.env.REASONING_MODEL || 'anthropic/claude-3.7-sonnet',
-  TITLE_MODEL: process.env.TITLE_MODEL || 'meta-llama/llama-3-8b-instruct',
-  ARTIFACT_MODEL: process.env.ARTIFACT_MODEL || 'anthropic/claude-3-haiku',
-  MULTIMODAL_MODEL:
-    process.env.MULTIMODAL_MODEL || 'anthropic/claude-3.7-sonnet',
+  get PRIMARY_MODEL() {
+    return process.env.PRIMARY_MODEL || 'anthropic/claude-3.7-sonnet';
+  },
+  get CHAT_MODEL() {
+    return process.env.CHAT_MODEL || 'anthropic/claude-3.7-sonnet';
+  },
+  get REASONING_MODEL() {
+    return process.env.REASONING_MODEL || 'anthropic/claude-3.7-sonnet';
+  },
+  get TITLE_MODEL() {
+    return process.env.TITLE_MODEL || 'meta-llama/llama-3-8b-instruct';
+  },
+  get ARTIFACT_MODEL() {
+    return process.env.ARTIFACT_MODEL || 'anthropic/claude-3-haiku';
+  },
+  get MULTIMODAL_MODEL() {
+    return process.env.MULTIMODAL_MODEL || 'anthropic/claude-3.7-sonnet';
+  },
 
   // Model parameters
-  MODEL_TEMPERATURE: Number.parseFloat(process.env.MODEL_TEMPERATURE || '0.7'),
-  MAX_TOKENS: Number.parseInt(process.env.MAX_TOKENS || '40960'),
+  get MODEL_TEMPERATURE() {
+    return Number.parseFloat(process.env.MODEL_TEMPERATURE || '0.7');
+  },
+  get MAX_TOKENS() {
+    return Number.parseInt(process.env.MAX_TOKENS || '40960');
+  },
 
   // Image generation configuration
-  IMAGE_GENERATION_MODEL:
-    process.env.IMAGE_GENERATION_MODEL || 'anthropic/claude-3.7-sonnet',
-  IMAGE_SIZE: process.env.IMAGE_SIZE || '1024x1024',
-  IMAGE_COUNT: Number.parseInt(process.env.IMAGE_COUNT || '1'),
-  RETRY_COUNT: Number.parseInt(process.env.RETRY_COUNT || '3'),
+  get IMAGE_GENERATION_MODEL() {
+    return process.env.IMAGE_GENERATION_MODEL || 'anthropic/claude-3.7-sonnet';
+  },
+  get IMAGE_SIZE() {
+    return process.env.IMAGE_SIZE || '1024x1024';
+  },
+  get IMAGE_COUNT() {
+    return Number.parseInt(process.env.IMAGE_COUNT || '1');
+  },
+  get RETRY_COUNT() {
+    return Number.parseInt(process.env.RETRY_COUNT || '3');
+  },
 };

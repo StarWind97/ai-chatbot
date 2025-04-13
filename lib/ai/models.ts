@@ -18,3 +18,6 @@ export const chatModels: Array<ChatModel> = [
     description: 'Uses advanced reasoning',
   },
 ];
+
+// Export chat models for testing purposes
+export const chatModelsForTest = chatModels;

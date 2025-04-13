@@ -1,5 +1,4 @@
 import { Artifact } from '@/components/create-artifact';
-import { CodeEditor } from '@/components/code-editor';
 import {
   CopyIcon,
   LogsIcon,
@@ -9,12 +8,13 @@ import {
   UndoIcon,
 } from '@/components/icons';
 import { toast } from 'sonner';
-import { generateUUID } from '@/lib/utils';
+import { generateUUID, detectCodeLanguage } from '@/lib/utils';
 import {
   Console,
   type ConsoleOutput,
   type ConsoleOutputContent,
 } from '@/components/console';
+import { Markdown } from '@/components/markdown';
 
 const OUTPUT_HANDLERS = {
   matplotlib: `
@@ -94,7 +94,11 @@ export const codeArtifact = new Artifact<'code', Metadata>({
     return (
       <>
         <div className="px-1">
-          <CodeEditor {...props} />
+          <Markdown className="w-full">
+            {`\`\`\`${detectCodeLanguage(props.content)}
+${props.content}
+\`\`\``}
+          </Markdown>
         </div>
 
         {metadata?.outputs && (

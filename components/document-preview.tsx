@@ -10,17 +10,17 @@ import {
 } from 'react';
 import type { ArtifactKind, UIArtifact } from './artifact';
 import { FileIcon, FullscreenIcon, ImageIcon, LoaderIcon } from './icons';
-import { cn, fetcher } from '@/lib/utils';
+import { cn, fetcher, detectCodeLanguage } from '@/lib/utils';
 import type { Document } from '@/lib/db/schema';
 import { InlineDocumentSkeleton } from './document-skeleton';
 import useSWR from 'swr';
 import { Editor } from './text-editor';
 import { DocumentToolCall, DocumentToolResult } from './document';
-import { CodeEditor } from './code-editor';
 import { useArtifact } from '@/hooks/use-artifact';
 import equal from 'fast-deep-equal';
 import { SpreadsheetEditor } from './sheet-editor';
 import { ImageEditor } from './image-editor';
+import { Markdown } from './markdown';
 
 interface DocumentPreviewProps {
   isReadonly: boolean;
@@ -259,10 +259,12 @@ const DocumentContent = ({ document }: { document: Document }) => {
       {document.kind === 'text' ? (
         <Editor {...commonProps} onSaveContent={() => {}} />
       ) : document.kind === 'code' ? (
-        <div className="flex flex-1 relative w-full">
-          <div className="absolute inset-0">
-            <CodeEditor {...commonProps} onSaveContent={() => {}} />
-          </div>
+        <div className="flex flex-1 relative w-full p-4">
+          <Markdown className="w-full h-full">
+            {`\`\`\`${document.content ? detectCodeLanguage(document.content) : ''}
+${document.content || ''}
+\`\`\``}
+          </Markdown>
         </div>
       ) : document.kind === 'sheet' ? (
         <div className="flex flex-1 relative size-full p-4">

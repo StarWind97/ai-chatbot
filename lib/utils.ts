@@ -160,3 +160,105 @@ export function getTrailingMessageId({
 
   return trailingMessage.id;
 }
+
+/**
+ * Detects programming language based on code content
+ * Returns language identifier for markdown code blocks
+ */
+export function detectCodeLanguage(codeInput: string): string {
+  // Skip detection for empty code
+  if (!codeInput || codeInput.trim().length === 0) {
+    return '';
+  }
+
+  const code = codeInput.trim();
+
+  // HTML detection
+  if (
+    code.includes('<html') ||
+    code.includes('<!DOCTYPE html') ||
+    (code.includes('<') &&
+      code.includes('</') &&
+      (code.includes('<div') || code.includes('<p') || code.includes('<body')))
+  ) {
+    return 'html';
+  }
+
+  // JavaScript/TypeScript detection
+  if (
+    (code.includes('function') || code.includes('=>')) &&
+    (code.includes('const ') ||
+      code.includes('let ') ||
+      code.includes('var ') ||
+      code.includes('import ') ||
+      code.includes('export ') ||
+      code.includes('class ') ||
+      code.includes('return '))
+  ) {
+    // Check for TypeScript specific syntax
+    if (
+      code.includes(': string') ||
+      code.includes(': number') ||
+      code.includes(': boolean') ||
+      code.includes(': any') ||
+      code.includes('interface ') ||
+      code.includes('<T>') ||
+      code.includes('as ') ||
+      code.includes(': []')
+    ) {
+      return 'typescript';
+    }
+    return 'javascript';
+  }
+
+  // CSS detection
+  if (
+    code.includes('{') &&
+    code.includes('}') &&
+    (code.includes('color:') ||
+      code.includes('margin:') ||
+      code.includes('padding:') ||
+      code.includes('@media') ||
+      code.includes('border:'))
+  ) {
+    return 'css';
+  }
+
+  // Python detection
+  if (
+    code.includes('def ') ||
+    (code.includes('import ') && code.includes(':')) ||
+    code.includes('print(') ||
+    (code.includes('if ') && code.includes(':')) ||
+    (code.includes('for ') && code.includes(' in ')) ||
+    (code.includes('class ') && code.includes(':'))
+  ) {
+    return 'python';
+  }
+
+  // SQL detection
+  if (
+    (code.toUpperCase().includes('SELECT ') &&
+      code.toUpperCase().includes(' FROM ')) ||
+    code.toUpperCase().includes('CREATE TABLE ') ||
+    code.toUpperCase().includes('INSERT INTO ')
+  ) {
+    return 'sql';
+  }
+
+  // JSON detection
+  if (
+    (code.startsWith('{') && code.endsWith('}')) ||
+    (code.startsWith('[') && code.endsWith(']'))
+  ) {
+    try {
+      JSON.parse(code);
+      return 'json';
+    } catch (e) {
+      // Not valid JSON
+    }
+  }
+
+  // If no specific language detected, return empty string
+  return '';
+}

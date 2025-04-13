@@ -1,13 +1,3 @@
-import { z } from 'zod';
-
-// Log the raw environment variable when the module loads
-if (process.env.NODE_ENV !== 'production') {
-  console.log(
-    '[DEBUG] Raw process.env.DASHSCOPE_WANX_MODELS on module load:',
-    process.env.DASHSCOPE_WANX_MODELS,
-  );
-}
-
 // Environment variable type definitions
 // Adding type conversion processing in env.ts
 

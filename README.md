@@ -144,3 +144,47 @@ pnpm dev
 ```
 
 Your app template should now be running on [localhost:3000](http://localhost:3000/).
+
+## Deployment Notes (Learning Setup) / 部署注意事项 (学习配置)
+
+**Important:** This project is currently configured to use the **same database** for both local development and Vercel deployment. This is done **for learning and demonstration purposes only** and is **not recommended for real-world applications**.
+
+**关键提示：** 本项目当前配置为本地开发和 Vercel 部署使用**同一个数据库**。这**仅为学习和演示目的**，**不建议在实际项目中使用**。
+
+### Migration Behavior / 迁移行为
+
+To prevent errors from re-running migrations on the shared database during Vercel builds, the `build` script in `package.json` has been modified:
+
+*   `"build": "next build"` (The automatic migration step `tsx lib/db/migrate &&` has been removed).
+
+为防止在 Vercel 构建期间在共享数据库上重复运行迁移导致错误，`package.json` 中的 `build` 脚本已被修改：
+
+*   `"build": "next build"` (自动迁移步骤 `tsx lib/db/migrate &&` 已被移除)。
+
+### Required Action / 必要操作
+
+**Before deploying any code that requires database schema changes:**
+
+1.  Make your schema changes (e.g., in `lib/db/schema.ts`).
+2.  Generate the migration file: `pnpm run db:generate`.
+3.  **Manually apply the migration to the shared database locally:** `pnpm run db:migrate`.
+4.  Commit your code changes (including the new migration file) and deploy to Vercel.
+
+**在部署任何需要数据库结构更改的代码之前：**
+
+1.  进行你的结构更改 (例如，在 `lib/db/schema.ts` 中)。
+2.  生成迁移文件：`pnpm run db:generate`。
+3.  **在本地手动将迁移应用到共享数据库：** `pnpm run db:migrate`。
+4.  提交你的代码更改 (包括新的迁移文件) 并部署到 Vercel。
+
+### Recommendation for Real Projects / 实际项目建议
+
+For real projects, it is strongly recommended to:
+
+*   Use separate database instances for development, preview, and production environments.
+*   Configure your deployment pipeline (e.g., on Vercel) to handle database migrations automatically and safely against the correct environment's database.
+
+对于实际项目，强烈建议：
+
+*   为开发、预览和生产环境使用独立的数据库实例。
+*   配置你的部署流水线 (例如，在 Vercel 上) 以自动且安全地针对正确环境的数据库处理数据库迁移。

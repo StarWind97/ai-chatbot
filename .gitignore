@@ -23,18 +23,28 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# local env files
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
 # turbo
 .turbo
 
-.env
+# --- WARNING --- [English]
+# The following line `.env` is commented out FOR LEARNING PURPOSES ONLY.
+# In REAL projects, NEVER commit .env files as they contain sensitive information like API keys and database credentials.
+# Use environment variables provided by your hosting platform (e.g., Vercel, Netlify) for production.
+# --- 警告 --- [中文]
+# 下方的 `.env` 行仅为【学习目的】而被注释掉。
+# 在【实际项目】中，【绝对不要】提交 .env 文件，因为它包含 API 密钥、数据库凭证等敏感信息。
+# 生产环境应使用托管平台（如 Vercel, Netlify）提供的环境变量。
+# .env
 .vercel
 .env*.local
+
+# local env files
+# The lines below were removed because they are covered by the `.env*.local` pattern later.
+# .env.local
+# .env.development.local
+# .env.test.local
+# .env.production.local
+
 
 # Playwright
 /test-results/

@@ -89,6 +89,7 @@
     "@biomejs/biome": "1.9.4",
     "@playwright/test": "^1.50.1",
     "@tailwindcss/typography": "^0.5.15",
+    "@types/codemirror": "^5.60.15",
     "@types/d3-scale": "^4.0.8",
     "@types/node": "^22.8.6",
     "@types/papaparse": "^5.3.15",

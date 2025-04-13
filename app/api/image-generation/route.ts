@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import { generateImage } from '@/lib/ai/tools/generate-image';
 import { generateFluxImage } from '@/lib/ai/providers/aliyun-flux';
 
 // Define types

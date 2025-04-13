@@ -530,6 +530,7 @@ function PureMultimodalInput({
               }
             }}
           >
+            {/* 生图按钮并不适合放在这个位置：人的直觉会认为是图片上传入口 */}
             <DialogTrigger asChild>
               <Button
                 data-testid="image-generator-button"

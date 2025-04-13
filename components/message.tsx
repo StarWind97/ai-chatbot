@@ -20,7 +20,6 @@ import { DocumentPreview } from './document-preview';
 import { MessageReasoning } from './message-reasoning';
 import type { UseChatHelpers } from '@ai-sdk/react';
 import Image from 'next/image';
-import { PenLineIcon, SendIcon } from 'lucide-react';
 
 const PurePreviewMessage = ({
   chatId,

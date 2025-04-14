@@ -18,7 +18,9 @@ import {
   type DBMessage,
   type Chat,
 } from './schema';
-import type { ArtifactKind } from '@/components/artifact';
+
+// 定义文档类型
+type DocumentKind = 'text' | 'code' | 'sheet';
 
 // Optionally, if not using email/pass login, you can
 // use the Drizzle adapter for Auth.js / NextAuth
@@ -237,7 +239,7 @@ export async function saveDocument({
 }: {
   id: string;
   title: string;
-  kind: ArtifactKind;
+  kind: DocumentKind;
   content: string;
   userId: string;
 }) {

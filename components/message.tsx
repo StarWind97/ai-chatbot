@@ -6,7 +6,6 @@ import cn from 'classnames';
 import { AnimatePresence, motion } from 'framer-motion';
 import { memo } from 'react';
 import type { Vote } from '@/lib/db/schema';
-import { DocumentToolCall, DocumentToolResult } from './document';
 import { PencilEditIcon, SparklesIcon } from './icons';
 import { Markdown } from './markdown';
 import { MessageActions } from './message-actions';
@@ -16,7 +15,6 @@ import equal from 'fast-deep-equal';
 import { Button } from './ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 import { MessageEditor } from './message-editor';
-import { DocumentPreview } from './document-preview';
 import { MessageReasoning } from './message-reasoning';
 import type { UseChatHelpers } from '@ai-sdk/react';
 import Image from 'next/image';
@@ -56,6 +54,22 @@ const PurePreviewMessage = ({
     );
   }
 
+  // Function to process text content and embed image references as Markdown
+  const processTextWithImages = (text: string): string => {
+    if (!imageAttachments.length) return text;
+
+    // Create markdown image references and append to the text
+    const imageMarkdown = imageAttachments
+      .map(
+        (img, index) =>
+          `\n\n![${img.name || `Image ${index + 1}`}](${img.url})`,
+      )
+      .join('');
+
+    // Return the original text with image markdown appended
+    return text + imageMarkdown;
+  };
+
   return (
     <AnimatePresence>
       <motion.div
@@ -84,7 +98,8 @@ const PurePreviewMessage = ({
 
           <div className="flex flex-col gap-4 w-full">
             {message.experimental_attachments &&
-              message.experimental_attachments.length > 0 && (
+              message.experimental_attachments.length > 0 &&
+              message.role === 'user' && ( // Only show attachment previews for user messages
                 <div className="mt-2 flex flex-col gap-2">
                   {message.experimental_attachments.map((attachment, i) => (
                     <div
@@ -146,7 +161,19 @@ const PurePreviewMessage = ({
                         {message.role === 'user' ? (
                           <div className="whitespace-pre-wrap">{part.text}</div>
                         ) : (
-                          <Markdown>{part.text}</Markdown>
+                          <>
+                            {process.env.NODE_ENV !== 'production' &&
+                              console.log(
+                                '[DEBUG] Rendering Markdown with content:',
+                                part.text,
+                              )}
+                            <Markdown>
+                              {message.role === 'assistant' &&
+                              imageAttachments.length > 0
+                                ? processTextWithImages(part.text)
+                                : part.text}
+                            </Markdown>
+                          </>
                         )}
                       </div>
                     </div>
@@ -184,23 +211,7 @@ const PurePreviewMessage = ({
                         skeleton: ['getWeather'].includes(toolName),
                       })}
                     >
-                      {toolName === 'getWeather' ? (
-                        <Weather />
-                      ) : toolName === 'createDocument' ? (
-                        <DocumentPreview isReadonly={isReadonly} args={args} />
-                      ) : toolName === 'updateDocument' ? (
-                        <DocumentToolCall
-                          type="update"
-                          args={args}
-                          isReadonly={isReadonly}
-                        />
-                      ) : toolName === 'requestSuggestions' ? (
-                        <DocumentToolCall
-                          type="request-suggestions"
-                          args={args}
-                          isReadonly={isReadonly}
-                        />
-                      ) : null}
+                      {toolName === 'getWeather' ? <Weather /> : null}
                     </div>
                   );
                 }
@@ -212,66 +223,15 @@ const PurePreviewMessage = ({
                     <div key={toolCallId}>
                       {toolName === 'getWeather' ? (
                         <Weather weatherAtLocation={result} />
-                      ) : toolName === 'createDocument' ? (
-                        <DocumentPreview
-                          isReadonly={isReadonly}
-                          result={result}
-                        />
-                      ) : toolName === 'updateDocument' ? (
-                        <DocumentToolResult
-                          type="update"
-                          result={result}
-                          isReadonly={isReadonly}
-                        />
-                      ) : toolName === 'requestSuggestions' ? (
-                        <DocumentToolResult
-                          type="request-suggestions"
-                          result={result}
-                          isReadonly={isReadonly}
-                        />
-                      ) : (
-                        <pre>{JSON.stringify(result, null, 2)}</pre>
-                      )}
+                      ) : null}
                     </div>
                   );
                 }
               }
             })}
 
-            {mode === 'view' && imageAttachments.length > 0 && (
-              <div className="mt-3 grid grid-cols-1 gap-3">
-                {imageAttachments.map((attachment, index) => (
-                  <div
-                    key={`${attachment.name || 'image'}-${index}`}
-                    className="relative border border-border rounded-md overflow-hidden"
-                  >
-                    <div className="relative aspect-square max-w-md">
-                      <Image
-                        src={attachment.url}
-                        alt={attachment.name || 'Generated image'}
-                        fill
-                        className="object-contain"
-                        onError={(e) => {
-                          console.error(
-                            `[ERROR] Failed to load image: ${attachment.name || 'unnamed'}`,
-                            e,
-                          );
-                        }}
-                      />
-                    </div>
-                    {attachment.name && (
-                      <div className="p-2 text-xs truncate bg-background/50 absolute bottom-0 left-0 right-0">
-                        {attachment.name}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {!isReadonly && (
+            {message.role === 'assistant' && (
               <MessageActions
-                key={`action-${message.id}`}
                 chatId={chatId}
                 message={message}
                 vote={vote}
@@ -285,47 +245,25 @@ const PurePreviewMessage = ({
   );
 };
 
-export const PreviewMessage = memo(
-  PurePreviewMessage,
-  (prevProps, nextProps) => {
-    if (prevProps.isLoading !== nextProps.isLoading) return false;
-    if (prevProps.message.id !== nextProps.message.id) return false;
-    if (!equal(prevProps.message.parts, nextProps.message.parts)) return false;
-    if (!equal(prevProps.vote, nextProps.vote)) return false;
+function areEqual(prevProps: any, nextProps: any) {
+  return (
+    prevProps.message.id === nextProps.message.id &&
+    prevProps.isLoading === nextProps.isLoading &&
+    prevProps.message.content === nextProps.message.content &&
+    equal(prevProps.vote, nextProps.vote)
+  );
+}
 
-    return true;
-  },
-);
+export const PreviewMessage = memo(PurePreviewMessage, areEqual);
 
 export const ThinkingMessage = () => {
-  const role = 'assistant';
-
   return (
-    <motion.div
-      data-testid="message-assistant-loading"
-      className="w-full mx-auto max-w-3xl px-4 group/message "
-      initial={{ y: 5, opacity: 0 }}
-      animate={{ y: 0, opacity: 1, transition: { delay: 1 } }}
-      data-role={role}
-    >
-      <div
-        className={cn(
-          'flex gap-4 group-data-[role=user]/message:px-3 w-full group-data-[role=user]/message:w-fit group-data-[role=user]/message:ml-auto group-data-[role=user]/message:max-w-2xl group-data-[role=user]/message:py-2 rounded-xl',
-          {
-            'group-data-[role=user]/message:bg-muted': true,
-          },
-        )}
-      >
-        <div className="size-8 flex items-center rounded-full justify-center ring-1 shrink-0 ring-border">
-          <SparklesIcon size={14} />
-        </div>
-
-        <div className="flex flex-col gap-2 w-full">
-          <div className="flex flex-col gap-4 text-muted-foreground">
-            Hmm...
-          </div>
+    <div className="flex gap-4 w-full mx-auto max-w-3xl px-4">
+      <div className="flex-1 flex-wrap">
+        <div className="bg-muted/50 p-3 rounded-md max-w-fit animate-pulse">
+          <div className="size-1.5 bg-muted-foreground/50 rounded-full animate-bounce" />
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 };

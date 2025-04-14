@@ -1,9 +1,9 @@
 import { auth } from '@/app/(auth)/auth';
 import { NextResponse } from 'next/server';
-import { generateFluxImage } from '@/lib/ai/providers/aliyun-flux';
+import { generateAliyunImage } from '@/lib/ai/providers/aliyun';
 
 /**
- * API route for image generation using Aliyun DashScope API
+ * API route for image generation using Aliyun Bailian API
  *
  * This endpoint accepts a POST request with a prompt and optional parameters,
  * and returns the generated image as base64 encoded data.
@@ -54,7 +54,7 @@ export async function POST(request: Request) {
       imageData,
       errorInfo,
       model: usedModel,
-    } = await generateFluxImage({
+    } = await generateAliyunImage({
       prompt,
       negative_prompt,
       width,
@@ -67,14 +67,14 @@ export async function POST(request: Request) {
 
     // Prepare error message based on error info (if available)
     let message = isPlaceholder
-      ? 'API authentication failed. Please check your Aliyun DashScope API key or contact the administrator. Using placeholder image.'
+      ? 'API authentication failed. Please check your Aliyun API key or contact the administrator. Using placeholder image.'
       : `Image generated successfully using model: ${usedModel || model || 'default'}`;
 
     // If we have specific error info, provide a more detailed message
     if (errorInfo) {
       if (errorInfo.code === 'InternalError.Algo') {
         message =
-          'The DashScope API encountered an internal server error. This is not an issue with your API key or settings. Using placeholder image.';
+          'The Aliyun Bailian API encountered an internal server error. This is not an issue with your API key or settings. Using placeholder image.';
       } else if (errorInfo.code === 'STILL_PROCESSING') {
         message =
           errorInfo.message ||

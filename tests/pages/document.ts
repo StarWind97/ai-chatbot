@@ -1,14 +1,14 @@
 import { expect, type Page } from '@playwright/test';
 
-export class ArtifactPage {
+export class DocumentPage {
   constructor(private page: Page) {}
 
-  public get artifact() {
-    return this.page.getByTestId('artifact');
+  public get document() {
+    return this.page.getByTestId('document');
   }
 
   public get sendButton() {
-    return this.artifact.getByTestId('send-button');
+    return this.document.getByTestId('send-button');
   }
 
   public get stopButton() {
@@ -28,13 +28,13 @@ export class ArtifactPage {
   }
 
   async sendUserMessage(message: string) {
-    await this.artifact.getByTestId('multimodal-input').click();
-    await this.artifact.getByTestId('multimodal-input').fill(message);
-    await this.artifact.getByTestId('send-button').click();
+    await this.document.getByTestId('multimodal-input').click();
+    await this.document.getByTestId('multimodal-input').fill(message);
+    await this.document.getByTestId('send-button').click();
   }
 
   async getRecentAssistantMessage() {
-    const messageElements = await this.artifact
+    const messageElements = await this.document
       .getByTestId('message-assistant')
       .all();
     const lastMessageElement = messageElements[messageElements.length - 1];
@@ -69,7 +69,7 @@ export class ArtifactPage {
   }
 
   async getRecentUserMessage() {
-    const messageElements = await this.artifact
+    const messageElements = await this.document
       .getByTestId('message-user')
       .all();
     const lastMessageElement = messageElements[messageElements.length - 1];
@@ -85,7 +85,7 @@ export class ArtifactPage {
       ? await lastMessageElement.getByTestId('message-attachments').all()
       : [];
 
-    const page = this.artifact;
+    const page = this.document;
 
     return {
       element: lastMessageElement,
@@ -102,7 +102,7 @@ export class ArtifactPage {
     };
   }
 
-  async closeArtifact() {
-    return this.page.getByTestId('artifact-close-button').click();
+  async closeDocument() {
+    return this.page.getByTestId('document-close-button').click();
   }
 }

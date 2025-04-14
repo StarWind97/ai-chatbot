@@ -45,12 +45,12 @@ export const env = {
     );
   },
 
-  // Aliyun DashScope Image Models
-  get DASHSCOPE_FLUX_MODEL() {
-    return process.env.DASHSCOPE_FLUX_MODEL || 'flux-schnell';
+  // Aliyun Bailian Image Models
+  get ALIYUN_FLUX_MODEL() {
+    return process.env.ALIYUN_FLUX_MODEL || 'flux-schnell';
   },
-  get DASHSCOPE_WANX_MODELS() {
-    const rawValue = process.env.DASHSCOPE_WANX_MODELS;
+  get ALIYUN_WANX_MODELS() {
+    const rawValue = process.env.ALIYUN_WANX_MODELS;
     return (rawValue || 'wanx2.1-t2i-turbo') // Default if env var is missing
       .split(',')
       .map((model) => model.trim())
@@ -75,8 +75,12 @@ export const env = {
   get TITLE_MODEL() {
     return process.env.TITLE_MODEL || 'meta-llama/llama-3-8b-instruct';
   },
-  get ARTIFACT_MODEL() {
-    return process.env.ARTIFACT_MODEL || 'anthropic/claude-3-haiku';
+  get DOCUMENT_MODEL() {
+    return (
+      process.env.DOCUMENT_MODEL ||
+      process.env.ARTIFACT_MODEL ||
+      'anthropic/claude-3-haiku'
+    );
   },
   get MULTIMODAL_MODEL() {
     return process.env.MULTIMODAL_MODEL || 'anthropic/claude-3.7-sonnet';
@@ -87,7 +91,7 @@ export const env = {
     return Number.parseFloat(process.env.MODEL_TEMPERATURE || '0.7');
   },
   get MAX_TOKENS() {
-    return Number.parseInt(process.env.MAX_TOKENS || '40960');
+    return Number.parseInt(process.env.MAX_TOKENS || '8000');
   },
 
   // Image generation configuration

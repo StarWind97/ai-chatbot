@@ -25,9 +25,24 @@ import {
 } from '@/components/ui/tooltip';
 
 import { ArrowUpIcon, StopIcon, SummarizeIcon } from './icons';
-import { artifactDefinitions, type ArtifactKind } from './artifact';
-import type { ArtifactToolbarItem } from './create-artifact';
+// 移除对 artifact 相关内容的引用
+// import { artifactDefinitions, type ArtifactKind } from './artifact';
+// import type { ArtifactToolbarItem } from './create-artifact';
 import type { UseChatHelpers } from '@ai-sdk/react';
+
+// 定义文档类型
+type DocumentKind = 'text' | 'code' | 'sheet';
+
+// 定义工具栏项类型
+interface ToolbarItem {
+  description: string;
+  icon: ReactNode;
+  onClick: ({
+    appendMessage,
+  }: {
+    appendMessage: UseChatHelpers['append'];
+  }) => void;
+}
 
 type ToolProps = {
   description: string;
@@ -252,7 +267,7 @@ export const Tools = ({
   append: UseChatHelpers['append'];
   isAnimating: boolean;
   setIsToolbarVisible: Dispatch<SetStateAction<boolean>>;
-  tools: Array<ArtifactToolbarItem>;
+  tools: Array<ToolbarItem>;
 }) => {
   const [primaryTool, ...secondaryTools] = tools;
 
@@ -301,7 +316,7 @@ const PureToolbar = ({
   status,
   stop,
   setMessages,
-  artifactKind,
+  documentKind,
 }: {
   isToolbarVisible: boolean;
   setIsToolbarVisible: Dispatch<SetStateAction<boolean>>;
@@ -309,7 +324,7 @@ const PureToolbar = ({
   append: UseChatHelpers['append'];
   stop: UseChatHelpers['stop'];
   setMessages: UseChatHelpers['setMessages'];
-  artifactKind: ArtifactKind;
+  documentKind: DocumentKind;
 }) => {
   const toolbarRef = useRef<HTMLDivElement>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
@@ -353,17 +368,24 @@ const PureToolbar = ({
     }
   }, [status, setIsToolbarVisible]);
 
-  const artifactDefinition = artifactDefinitions.find(
-    (definition) => definition.kind === artifactKind,
-  );
+  // 使用本地默认工具栏数据替代从 artifactDefinitions 获取
+  const defaultToolbarItems: ToolbarItem[] = [
+    {
+      description: 'Summarize',
+      icon: <SummarizeIcon />,
+      onClick: ({ appendMessage }) => {
+        appendMessage({
+          role: 'user',
+          content: 'Please summarize the above content.',
+        });
+      },
+    },
+  ];
 
-  if (!artifactDefinition) {
-    throw new Error('Artifact definition not found!');
-  }
+  // 根据文档类型可以添加不同的工具栏
+  const toolsByDocumentKind = defaultToolbarItems;
 
-  const toolsByArtifactKind = artifactDefinition.toolbar;
-
-  if (toolsByArtifactKind.length === 0) {
+  if (toolsByDocumentKind.length === 0) {
     return null;
   }
 
@@ -385,7 +407,7 @@ const PureToolbar = ({
               : {
                   opacity: 1,
                   y: 0,
-                  height: toolsByArtifactKind.length * 50,
+                  height: toolsByDocumentKind.length * 50,
                   transition: { delay: 0 },
                   scale: 1,
                 }
@@ -442,7 +464,7 @@ const PureToolbar = ({
             selectedTool={selectedTool}
             setIsToolbarVisible={setIsToolbarVisible}
             setSelectedTool={setSelectedTool}
-            tools={toolsByArtifactKind}
+            tools={toolsByDocumentKind}
           />
         )}
       </motion.div>
@@ -453,7 +475,7 @@ const PureToolbar = ({
 export const Toolbar = memo(PureToolbar, (prevProps, nextProps) => {
   if (prevProps.status !== nextProps.status) return false;
   if (prevProps.isToolbarVisible !== nextProps.isToolbarVisible) return false;
-  if (prevProps.artifactKind !== nextProps.artifactKind) return false;
+  if (prevProps.documentKind !== nextProps.documentKind) return false;
 
   return true;
 });

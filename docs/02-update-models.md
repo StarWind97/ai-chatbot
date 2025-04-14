@@ -2,7 +2,7 @@
 
 The chatbot template ships with [xAI](https://sdk.vercel.ai/providers/ai-sdk-providers/xai) as the default model provider. Since the template is powered by the [AI SDK](https://sdk.vercel.ai), which supports [multiple providers](https://sdk.vercel.ai/providers/ai-sdk-providers) out of the box, you can easily switch to another provider of your choice.
 
-To update the models, you will need to update the custom provider called `myProvider` at `/lib/ai/models.ts` shown below.
+To update the models, you will need to update the custom provider called `aiModelProvider` at `/lib/ai/model-provider.ts` shown below.
 
 ```ts
 import { customProvider } from "ai";
@@ -10,7 +10,7 @@ import { xai } from "@ai-sdk/xai";
 import { groq } from "@ai-sdk/groq";
 import { fal } from "@ai-sdk/fal";
 
-export const myProvider = customProvider({
+export const aiModelProvider = customProvider({
   languageModels: {
     "chat-model": xai("grok-2-1212"),
     "chat-model-reasoning": wrapLanguageModel({
@@ -36,7 +36,7 @@ import { fal } from "@ai-sdk/fal";
 import { groq } from "@ai-sdk/groq";
 import { anthropic } from "@ai-sdk/anthropic";
 
-export const myProvider = customProvider({
+export const aiModelProvider = customProvider({
   languageModels: {
     "chat-model": anthropic("claude-3-5-sonnet"), // Replace xai with anthropic
     "chat-model-reasoning": wrapLanguageModel({

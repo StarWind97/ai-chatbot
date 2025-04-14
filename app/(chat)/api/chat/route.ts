@@ -19,13 +19,10 @@ import {
   getTrailingMessageId,
 } from '@/lib/utils';
 import { generateTitleFromUserMessage } from '../../actions';
-import { createDocument } from '@/lib/ai/tools/create-document';
-import { updateDocument } from '@/lib/ai/tools/update-document';
-import { requestSuggestions } from '@/lib/ai/tools/request-suggestions';
 import { getWeather } from '@/lib/ai/tools/get-weather';
-import { generateImage } from '@/lib/ai/tools/generate-image';
 import { isProductionEnvironment } from '@/lib/constants';
-import { myProvider } from '@/lib/ai/providers';
+import { aiModelProvider } from '@/lib/ai/model-provider';
+import { env } from '@/lib/env';
 
 /**
  * AI-related libraries
@@ -50,14 +47,10 @@ import { myProvider } from '@/lib/ai/providers';
  * Chat features
  *   generateTitleFromUserMessage: Automatically generates chat title based on user message
  * AI tool set
- *   createDocument: Tool for AI to create documents
- *   updateDocument: Tool for AI to update documents
- *   requestSuggestions: Tool for AI to request suggestions
  *   getWeather: Tool to get weather information
- *   generateImage: Tool for AI to generate images
  * Environment and provider
  *   isProductionEnvironment: Determines if in production environment
- *   myProvider: AI model provider, used to get language model instance
+ *   aiModelProvider: AI model provider, used to get language model instance
  */
 
 /**
@@ -173,24 +166,18 @@ export async function POST(request: Request) {
       execute: (dataStream) => {
         const result = streamText({
           // Use specified language model
-          model: myProvider.languageModel(selectedChatModel),
+          model: aiModelProvider.languageModel(selectedChatModel),
           // Apply system prompt
           system: systemPrompt({ selectedChatModel }),
           // Pass message history
           messages,
+          // Set maximum tokens to control response length and avoid credit issues
+          maxTokens: env.MAX_TOKENS,
           // Set maximum steps, limiting model's thinking steps
           maxSteps: 5,
           // Dynamically enable different tools based on selected model
           experimental_activeTools:
-            selectedChatModel === 'chat-model-reasoning'
-              ? []
-              : [
-                  'getWeather',
-                  'createDocument',
-                  'updateDocument',
-                  'requestSuggestions',
-                  'generateImage',
-                ],
+            selectedChatModel === 'chat-model-reasoning' ? [] : ['getWeather'],
           // Use smoothStream to optimize output, chunk by word for more natural text output
           experimental_transform: smoothStream({ chunking: 'word' }),
           // Generate unique ID for each message
@@ -198,15 +185,6 @@ export async function POST(request: Request) {
           // Define available tools implementation
           tools: {
             getWeather,
-            createDocument: createDocument({ session, dataStream }),
-            updateDocument: updateDocument({ session, dataStream }),
-            requestSuggestions: requestSuggestions({
-              session,
-              dataStream,
-            }),
-            generateImage: generateImage({
-              dataStream,
-            }),
           },
           // Define operations to execute when response generation is complete
           //response.messages 主要包含的是当前交互的消息，即用户的最新提问和模型的最新回复。它不包含完整的对话历史。
@@ -428,7 +406,7 @@ streamText 是 AI 聊天应用中的核心函数，它负责从 AI 模型获取�
 这个函数接收一个配置对象，然后返回一个可以生成流式文本响应的结果对象。
 ### 核心参数
 1. model : 指定要使用的语言模型
-   - 通过 myProvider.languageModel(selectedChatModel) 获取
+   - 通过 aiModelProvider.languageModel(selectedChatModel) 获取
    - 根据用户选择的模型类型动态加载相应的模型
 2. system : 系统提示词
    - 通过 systemPrompt({ selectedChatModel }) 获取

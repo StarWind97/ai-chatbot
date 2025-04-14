@@ -1,27 +1,27 @@
 import { expect, test } from '@playwright/test';
 import { ChatPage } from './pages/chat';
-import { ArtifactPage } from './pages/artifact';
+import { DocumentPage } from './pages/document';
 
-test.describe('artifacts activity', () => {
+test.describe('documents activity', () => {
   let chatPage: ChatPage;
-  let artifactPage: ArtifactPage;
+  let documentPage: DocumentPage;
 
   test.beforeEach(async ({ page }) => {
     chatPage = new ChatPage(page);
-    artifactPage = new ArtifactPage(page);
+    documentPage = new DocumentPage(page);
 
     await chatPage.createNewChat();
   });
 
-  test('create a text artifact', async () => {
+  test('create a text document', async () => {
     await chatPage.createNewChat();
 
     await chatPage.sendUserMessage(
       'Help me write an essay about Silicon Valley',
     );
-    await artifactPage.isGenerationComplete();
+    await documentPage.isGenerationComplete();
 
-    expect(artifactPage.artifact).toBeVisible();
+    expect(documentPage.document).toBeVisible();
 
     const assistantMessage = await chatPage.getRecentAssistantMessage();
     expect(assistantMessage.content).toBe(
@@ -31,23 +31,23 @@ test.describe('artifacts activity', () => {
     await chatPage.hasChatIdInUrl();
   });
 
-  test('toggle artifact visibility', async () => {
+  test('toggle document visibility', async () => {
     await chatPage.createNewChat();
 
     await chatPage.sendUserMessage(
       'Help me write an essay about Silicon Valley',
     );
-    await artifactPage.isGenerationComplete();
+    await documentPage.isGenerationComplete();
 
-    expect(artifactPage.artifact).toBeVisible();
+    expect(documentPage.document).toBeVisible();
 
     const assistantMessage = await chatPage.getRecentAssistantMessage();
     expect(assistantMessage.content).toBe(
       'A document was created and is now visible to the user.',
     );
 
-    await artifactPage.closeArtifact();
-    await chatPage.isElementNotVisible('artifact');
+    await documentPage.closeDocument();
+    await chatPage.isElementNotVisible('document');
   });
 
   test('send follow up message after generation', async () => {
@@ -56,17 +56,17 @@ test.describe('artifacts activity', () => {
     await chatPage.sendUserMessage(
       'Help me write an essay about Silicon Valley',
     );
-    await artifactPage.isGenerationComplete();
+    await documentPage.isGenerationComplete();
 
-    expect(artifactPage.artifact).toBeVisible();
+    expect(documentPage.document).toBeVisible();
 
-    const assistantMessage = await artifactPage.getRecentAssistantMessage();
+    const assistantMessage = await documentPage.getRecentAssistantMessage();
     expect(assistantMessage.content).toBe(
       'A document was created and is now visible to the user.',
     );
 
-    await artifactPage.sendUserMessage('Thanks!');
-    await artifactPage.isGenerationComplete();
+    await documentPage.sendUserMessage('Thanks!');
+    await documentPage.isGenerationComplete();
 
     const secondAssistantMessage = await chatPage.getRecentAssistantMessage();
     expect(secondAssistantMessage.content).toBe("You're welcome!");

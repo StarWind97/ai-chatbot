@@ -88,7 +88,7 @@ export function GeneratedImagePreview({
                   服务器错误：无法生成图像
                 </span>
                 <p className="text-white/80 text-xs mt-1">
-                  阿里云DashScope
+                  SFM/Bailian
                   API遇到内部错误，这不是API密钥或设置问题。请稍后再试。
                 </p>
               </div>

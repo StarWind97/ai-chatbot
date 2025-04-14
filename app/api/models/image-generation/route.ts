@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getAvailableDashScopeModels } from '@/lib/ai/providers/aliyun-flux';
+import { getAvailableAliyunModels } from '@/lib/ai/providers/aliyun';
 
 export const dynamic = 'force-dynamic'; // Ensure the route is always dynamic
 
@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic'; // Ensure the route is always dynamic
  */
 export async function GET() {
   try {
-    const models = getAvailableDashScopeModels();
+    const models = getAvailableAliyunModels();
 
     // Remove the server-side log for returned models
     // if (process.env.NODE_ENV !== 'production') {

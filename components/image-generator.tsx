@@ -36,7 +36,7 @@ interface ImageModel {
 }
 
 /**
- * Component for generating images using Aliyun DashScope API
+ * Component for generating images using Aliyun Bailian API
  */
 export function ImageGenerator({
   onImageGenerated,

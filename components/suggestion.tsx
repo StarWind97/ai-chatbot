@@ -9,16 +9,18 @@ import type { UISuggestion } from '@/lib/editor/suggestions';
 import { CrossIcon, MessageIcon } from './icons';
 import { Button } from './ui/button';
 import { cn } from '@/lib/utils';
-import type { ArtifactKind } from './artifact';
+
+// 定义文档类型
+type DocumentKind = 'text' | 'code' | 'sheet';
 
 export const Suggestion = ({
   suggestion,
   onApply,
-  artifactKind,
+  documentKind,
 }: {
   suggestion: UISuggestion;
   onApply: () => void;
-  artifactKind: ArtifactKind;
+  documentKind: DocumentKind;
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const { width: windowWidth } = useWindowSize();
@@ -28,8 +30,8 @@ export const Suggestion = ({
       {!isExpanded ? (
         <motion.div
           className={cn('cursor-pointer text-muted-foreground p-1', {
-            'absolute -right-8': artifactKind === 'text',
-            'sticky top-0 right-4': artifactKind === 'code',
+            'absolute -right-8': documentKind === 'text',
+            'sticky top-0 right-4': documentKind === 'code',
           })}
           onClick={() => {
             setIsExpanded(true);

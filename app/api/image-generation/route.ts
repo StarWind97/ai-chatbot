@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { generateFluxImage } from '@/lib/ai/providers/aliyun-flux';
+import { generateAliyunImage } from '@/lib/ai/providers/aliyun';
 
 // Define types
 interface GenerateImageRequest {
@@ -14,8 +14,8 @@ export async function POST(request: Request) {
   // Directly log the environment variable at the start of the request handler
   if (process.env.NODE_ENV !== 'production') {
     console.log(
-      '[DEBUG] Direct check of process.env.DASHSCOPE_WANX_MODELS in API route:',
-      process.env.DASHSCOPE_WANX_MODELS,
+      '[DEBUG] Direct check of process.env.ALIYUN_WANX_MODELS in API route:',
+      process.env.ALIYUN_WANX_MODELS,
     );
   }
 
@@ -62,7 +62,7 @@ export async function POST(request: Request) {
     };
 
     // Call the image generation function directly
-    const result = await generateFluxImage({
+    const result = await generateAliyunImage({
       prompt: data.prompt,
       negative_prompt: data.negativePrompt || '',
       width: data.width || 1024,
